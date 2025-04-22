@@ -96,4 +96,41 @@ app.delete("/gadgets", async (req,res)=>{
 })
 
 
+app.post("/gadgets/self-destruct", async (req, res):Promise<any> => {
+    const { id } = req.body;
+  
+    const gadget = await prisma.gadget.findUnique({
+      where: { id }
+    });
+  
+    if (!gadget) {
+      return res.status(404).json({ message: "Gadget not found" });
+    }
+  
+    const confirmationCode = Math.floor(100000 + Math.random() * 900000);
+    res.json({
+      message: "Self-destruct initiated",
+      confirmationCode,
+      gadget: gadget.name 
+    });
+  });
+  
+
+  app.get("/gadgets/:status", async (req, res):Promise<any> => {
+    const { status } = req.params; 
+  
+    const validStatuses = ['Available', 'Deployed', 'Destroyed', 'Decommissioned'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+  
+    const gadgets = await prisma.gadget.findMany({
+      where: { status: status as any }, 
+    });
+  
+    res.json(gadgets);
+  });
+  
+  
+  
 app.listen(3000)
